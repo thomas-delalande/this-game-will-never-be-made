@@ -102,7 +102,7 @@ fn renderSprites(sprites: [2]?SpriteComponent, transforms: [2]?TransformComponen
 }
 
 pub fn main() !void {
-    r.InitWindow(800, 800, "Cool Game");
+    r.InitWindow(960, 540, ".");
     r.SetTargetFPS(144);
     defer r.CloseWindow();
 
