@@ -2,6 +2,7 @@ const std = @import("std");
 const components = @import("components.zig");
 const common = @import("common.zig");
 const r = @cImport(@cInclude("raylib.h"));
+const RndGen = std.rand.DefaultPrng;
 
 pub fn moveEntities(movements: std.ArrayList(?components.MovementComponent), transforms: *std.ArrayList(?components.TransformComponent), deltaTime: f32) void {
     var input = common.Vector2{ .x = 0, .y = 0 };
@@ -37,6 +38,20 @@ pub fn renderSprites(sprites: std.ArrayList(?components.SpriteComponent), transf
                     .width = 32,
                     .height = 32,
                 }, r.Vector2{ .x = 16, .y = 16 }, 0, r.WHITE);
+            }
+        }
+    }
+}
+
+var rnd = RndGen.init(0);
+pub fn randomWalk(randomWalkers: std.ArrayList(?components.RandomWalker), transforms: *std.ArrayList(?components.TransformComponent), deltaTime: f32) void {
+    for (randomWalkers.items, transforms.items) |walker, *transform| {
+        if (walker) |_| {
+            if (transform.*) |*t| {
+                var x = @mod(rnd.random().float(f32), 32);
+                var y = @mod(rnd.random().float(f32), 32);
+                t.position.x += (x - 16) * deltaTime;
+                t.position.y += (y - 16) * deltaTime;
             }
         }
     }

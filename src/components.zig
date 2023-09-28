@@ -14,3 +14,5 @@ pub const MovementComponent = struct {
 };
 
 pub const TransformComponent = struct { position: common.Vector2 };
+
+pub const RandomWalker = struct {};
