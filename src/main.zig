@@ -24,45 +24,63 @@ const Entity = struct {
 };
 
 const Scene = struct {
-    entities: [2]Entity,
-    cameras: [2]?CameraComponent,
-    sprites: [2]?SpriteComponent,
-    movements: [2]?MovementComponent,
-    transforms: [2]?TransformComponent,
+    entities: std.ArrayList(Entity),
+    cameras: std.ArrayList(?CameraComponent),
+    sprites: std.ArrayList(?SpriteComponent),
+    movements: std.ArrayList(?MovementComponent),
+    transforms: std.ArrayList(?TransformComponent),
 };
 
-fn init(texture: r.Texture) Scene {
+fn initEntitiesAndComponents(scene: *Scene, texture: r.Texture) !void {
+    try scene.entities.append(.{ .id = 0 });
+    try scene.entities.append(.{ .id = 1 });
+
+    try scene.cameras.append(.{});
+    try scene.cameras.append(null);
+
+    try scene.sprites.append(null);
+    try scene.sprites.append(SpriteComponent{ .texture = texture, .source = r.Rectangle{
+        .x = 0,
+        .y = 0,
+        .width = 32,
+        .height = 32,
+    } });
+
+    try scene.movements.append(null);
+    try scene.movements.append(MovementComponent{
+        .speed = 50,
+    });
+
+    try scene.transforms.append(null);
+    try scene.transforms.append(TransformComponent{ .position = Vector2{
+        .x = 100,
+        .y = 100,
+    } });
+}
+fn initScene() Scene {
+    const allocator = std.heap.page_allocator;
     return Scene{
-        .entities = .{
-            Entity{
-                .id = 0,
-            },
-            Entity{
-                .id = 1,
-            },
-        },
-        .cameras = .{ CameraComponent{}, null },
-        .sprites = .{ null, SpriteComponent{ .texture = texture, .source = r.Rectangle{
-            .x = 0,
-            .y = 0,
-            .width = 32,
-            .height = 32,
-        } } },
-        .movements = .{ null, MovementComponent{
-            .speed = 50,
-        } },
-        .transforms = .{ null, TransformComponent{ .position = Vector2{
-            .x = 100,
-            .y = 100,
-        } } },
+        .entities = std.ArrayList(Entity).init(allocator),
+        .cameras = std.ArrayList(?CameraComponent).init(allocator),
+        .sprites = std.ArrayList(?SpriteComponent).init(allocator),
+        .movements = std.ArrayList(?MovementComponent).init(allocator),
+        .transforms = std.ArrayList(?TransformComponent).init(allocator),
     };
+}
+
+fn deinitScene(scene: Scene) void {
+    scene.entities.deinit();
+    scene.cameras.deinit();
+    scene.sprites.deinit();
+    scene.movements.deinit();
+    scene.transforms.deinit();
 }
 
 fn update(scene: *Scene, deltaTime: f32) void {
     moveEntities(scene.movements, &scene.transforms, deltaTime);
     renderSprites(scene.sprites, scene.transforms);
 }
-fn moveEntities(movements: [2]?MovementComponent, transforms: *[2]?TransformComponent, deltaTime: f32) void {
+fn moveEntities(movements: std.ArrayList(?MovementComponent), transforms: *std.ArrayList(?TransformComponent), deltaTime: f32) void {
     var input = Vector2{ .x = 0, .y = 0 };
     if (r.IsKeyDown(r.KEY_W)) {
         input.y = -1;
@@ -76,7 +94,7 @@ fn moveEntities(movements: [2]?MovementComponent, transforms: *[2]?TransformComp
     if (r.IsKeyDown(r.KEY_D)) {
         input.x = 1;
     }
-    for (movements, transforms) |movement, *transform| {
+    for (movements.items, transforms.items) |movement, *transform| {
         if (movement) |m| {
             if (transform.*) |*t| {
                 t.position.x += input.x * m.speed * deltaTime;
@@ -86,8 +104,8 @@ fn moveEntities(movements: [2]?MovementComponent, transforms: *[2]?TransformComp
     }
 }
 
-fn renderSprites(sprites: [2]?SpriteComponent, transforms: [2]?TransformComponent) void {
-    for (sprites, transforms) |sprite, transform| {
+fn renderSprites(sprites: std.ArrayList(?SpriteComponent), transforms: std.ArrayList(?TransformComponent)) void {
+    for (sprites.items, transforms.items) |sprite, transform| {
         if (sprite) |s| {
             if (transform) |t| {
                 r.DrawTexturePro(s.texture, s.source, r.Rectangle{
@@ -108,7 +126,8 @@ pub fn main() !void {
 
     const texture = r.LoadTexture("spritesheet.png");
     defer r.UnloadTexture(texture);
-    var scene = init(texture);
+    var scene = initScene();
+    try initEntitiesAndComponents(&scene, texture);
     while (!r.WindowShouldClose()) {
         r.BeginDrawing();
         r.ClearBackground(r.BLACK);
@@ -116,4 +135,6 @@ pub fn main() !void {
         r.EndDrawing();
         r.EndMode2D();
     }
+
+    deinitScene(scene);
 }
