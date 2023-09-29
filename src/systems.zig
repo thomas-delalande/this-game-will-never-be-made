@@ -35,9 +35,9 @@ pub fn renderSprites(sprites: std.ArrayList(?components.SpriteComponent), transf
                 r.DrawTexturePro(s.texture, s.source, r.Rectangle{
                     .x = t.position.x,
                     .y = t.position.y,
-                    .width = 32,
-                    .height = 32,
-                }, r.Vector2{ .x = 16, .y = 16 }, 0, r.WHITE);
+                    .width = s.width,
+                    .height = s.height,
+                }, r.Vector2{ .x = s.origin.x, .y = s.origin.y }, 0, r.WHITE);
             }
         }
     }
@@ -48,10 +48,10 @@ pub fn randomWalk(randomWalkers: std.ArrayList(?components.RandomWalker), transf
     for (randomWalkers.items, transforms.items) |walker, *transform| {
         if (walker) |_| {
             if (transform.*) |*t| {
-                var x = @mod(rnd.random().float(f32), 32);
-                var y = @mod(rnd.random().float(f32), 32);
-                t.position.x += (x - 16) * deltaTime;
-                t.position.y += (y - 16) * deltaTime;
+                var x = rnd.random().float(f32) * 32 - 16;
+                var y = rnd.random().float(f32) * 32 - 16;
+                t.position.x += x * deltaTime;
+                t.position.y += y * deltaTime;
             }
         }
     }

@@ -7,6 +7,9 @@ pub const CameraComponent = struct {};
 pub const SpriteComponent = struct {
     texture: r.Texture,
     source: r.Rectangle,
+    width: f32,
+    height: f32,
+    origin: common.Vector2,
 };
 
 pub const MovementComponent = struct {
